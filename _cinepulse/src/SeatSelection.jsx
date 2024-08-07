@@ -1,41 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Grid, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; // Change useHistory to useNavigate
+import { useNavigate } from 'react-router-dom';
 import './SeatSelection.css';
 
 const SeatSelection = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [seatCount, setSeatCount] = useState(1);
-  const navigate = useNavigate(); // Use useNavigate instead of useHistory
+  const [errorMessage, setErrorMessage] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Retrieve the seat count from session storage
     const storedSeatCount = sessionStorage.getItem('seatCount');
     setSeatCount(storedSeatCount ? parseInt(storedSeatCount) : 1);
   }, []);
 
-  const handleSeatClick = (seat) => {
-    setSelectedSeats((prevSelectedSeats) =>
-      prevSelectedSeats.includes(seat)
-        ? prevSelectedSeats.filter((s) => s !== seat)
-        : [...prevSelectedSeats, seat]
-    );
+  const handleSeatClick = (seat, price) => {
+    if (selectedSeats.includes(seat)) {
+      setSelectedSeats(selectedSeats.filter(s => s !== seat));
+    } else {
+      if (selectedSeats.length < seatCount) {
+        setSelectedSeats([...selectedSeats, { seat, price }]);
+        setErrorMessage('');
+      } else {
+        setErrorMessage(`You can only select up to ${seatCount} seats.`);
+      }
+    }
   };
 
   const handleNextClick = () => {
-    // Store the selected seats and seat count in session storage or context
+    if (selectedSeats.length !== seatCount) {
+      setErrorMessage(`Please select exactly ${seatCount} seats.`);
+      return;
+    }
     sessionStorage.setItem('selectedSeats', JSON.stringify(selectedSeats));
-    navigate('/Payment'); // Use navigate instead of history.push
+    navigate('/Payment');
   };
 
-  const renderSeats = (rows) => {
+  const renderSeats = (rows, price) => {
     return rows.map((row, rowIndex) => (
       <Grid container spacing={1} key={rowIndex} className="seat-row">
         {row.map((seat) => (
           <Grid item key={seat}>
             <Button
-              variant={selectedSeats.includes(seat) ? 'contained' : 'outlined'}
-              onClick={() => handleSeatClick(seat)}
+              variant={selectedSeats.some(s => s.seat === seat) ? 'contained' : 'outlined'}
+              onClick={() => handleSeatClick(seat, price)}
               className="seat-button"
             >
               {seat}
@@ -64,19 +72,24 @@ const SeatSelection = () => {
     ['I10', 'I9', 'I8', 'I7', 'I6', 'I5', 'I4', 'I3', 'I2', 'I1'],
   ];
 
+  const getTotalPrice = () => {
+    return selectedSeats.reduce((total, seat) => total + seat.price, 0);
+  };
+
   return (
     <div className="seat-selection-container">
       <Typography variant="h4" className="seat-selection-title">
         Select Your Seats
       </Typography>
       <Typography variant="h6" className="seat-category">Rs. 150 PLATINUM</Typography>
-      {renderSeats(platinumSeats)}
+      {renderSeats(platinumSeats, 150)}
       <Typography variant="h6" className="seat-category">Rs. 130 GOLD</Typography>
-      {renderSeats(goldSeats)}
-      <Typography variant="h6" className="seat-category">Rs. 130 SILVER</Typography>
-      {renderSeats(silverSeats)}
+      {renderSeats(goldSeats, 130)}
+      <Typography variant="h6" className="seat-category">Rs. 110 SILVER</Typography>
+      {renderSeats(silverSeats, 110)}
       <div className="price-and-next">
-        <Typography variant="h6">Total Price: Rs. {seatCount * 150}</Typography>
+        <Typography variant="h6">Total Price: Rs. {getTotalPrice()}</Typography>
+        {errorMessage && <Typography variant="body1" color="error">{errorMessage}</Typography>}
         <Button variant="contained" onClick={handleNextClick}>
           Next
         </Button>
