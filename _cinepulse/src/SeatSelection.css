@@ -1,0 +1,29 @@
+.seat-selection-container {
+    padding: 20px;
+}
+
+.seat-selection-title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.seat-category {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.seat-row {
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.seat-button {
+    min-width: 40px;
+    height: 40px;
+}
+
+.screen-indicator {
+    text-align: center;
+    margin-top: 20px;
+}
